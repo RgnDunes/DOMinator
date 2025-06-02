@@ -1,7 +1,11 @@
 // Simple content script
 
+// Notify that content script has loaded
+console.log("DOMinator: Content script loaded on", window.location.href);
+
 // Create a basic function to get DOM tree
 function getDOMTree() {
+  console.log("DOMinator: Generating DOM tree");
   // Simple function to parse the DOM into a JSON structure
   function parseNode(node, depth = 0) {
     const result = {
@@ -45,20 +49,52 @@ function getDOMTree() {
 }
 
 // Handle messages from popup or background
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  console.log("DOMinator: Content script received message:", message);
+
+  // Handle PING message for availability check
+  if (message && message.type === "PING") {
+    console.log("DOMinator: Responding to PING");
+    sendResponse({ type: "PONG" });
+    return true;
+  }
+
   // Send DOM tree if requested
   if (message && message.type === "REQUEST_DOM_TREE") {
-    const domTree = getDOMTree();
-    sendResponse({
-      type: "DOM_TREE_RESPONSE",
-      payload: {
-        root: domTree,
-        stats: {
-          totalNodes: document.querySelectorAll("*").length,
-          maxDepth: getMaxDepth(document.documentElement),
+    try {
+      console.log("DOMinator: Processing DOM tree request");
+      const domTree = getDOMTree();
+      const stats = {
+        totalNodes: document.querySelectorAll("*").length,
+        maxDepth: getMaxDepth(document.documentElement),
+      };
+
+      console.log(
+        "DOMinator: DOM tree generated with",
+        stats.totalNodes,
+        "nodes"
+      );
+
+      const response = {
+        type: "DOM_TREE_RESPONSE",
+        payload: {
+          root: domTree,
+          stats: stats,
         },
-      },
-    });
+      };
+
+      console.log("DOMinator: Sending response");
+      sendResponse(response);
+      console.log("DOMinator: Response sent");
+    } catch (error) {
+      console.error("DOMinator: Error generating DOM tree", error);
+      sendResponse({
+        type: "ERROR",
+        payload: {
+          message: error.message,
+        },
+      });
+    }
   }
 
   // Return true to indicate we'll respond asynchronously
@@ -79,4 +115,27 @@ function getMaxDepth(node, depth = 0) {
   }
 
   return maxChildDepth;
+}
+
+// Add a small element to the page to indicate the extension is active
+function addIndicator() {
+  const indicator = document.createElement("div");
+  indicator.style.position = "fixed";
+  indicator.style.bottom = "5px";
+  indicator.style.right = "5px";
+  indicator.style.width = "10px";
+  indicator.style.height = "10px";
+  indicator.style.backgroundColor = "#4285f4";
+  indicator.style.borderRadius = "50%";
+  indicator.style.zIndex = "9999";
+  indicator.style.opacity = "0.7";
+  indicator.title = "DOMinator is active on this page";
+  document.body.appendChild(indicator);
+}
+
+// Initialize when the page is ready
+if (document.readyState === "complete") {
+  addIndicator();
+} else {
+  window.addEventListener("load", addIndicator);
 }

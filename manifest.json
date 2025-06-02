@@ -3,7 +3,7 @@
   "name": "DOMinator",
   "version": "1.0.0",
   "description": "Visualize, analyze, and export DOM trees with powerful insights for web developers",
-  "permissions": ["activeTab", "storage", "tabs"],
+  "permissions": ["activeTab", "storage", "tabs", "scripting"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
