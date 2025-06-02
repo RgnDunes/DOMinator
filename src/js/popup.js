@@ -55,6 +55,205 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
+  // Functions for diagram creation - must be defined before they're used
+  function simplifyNodeForDiagram(node, currentDepth = 0, maxDepth = 5) {
+    // Skip if we've reached max depth
+    if (currentDepth > maxDepth) {
+      return null;
+    }
+
+    // Skip non-element nodes except for significant text nodes
+    if (
+      node.nodeType !== 1 &&
+      !(
+        node.nodeType === 3 &&
+        node.nodeValue &&
+        node.nodeValue.trim().length > 5
+      )
+    ) {
+      return null;
+    }
+
+    // Skip script, style, meta tags in the diagram
+    if (
+      node.nodeType === 1 &&
+      (node.tagName === "SCRIPT" ||
+        node.tagName === "LINK" ||
+        node.tagName === "NOSCRIPT")
+    ) {
+      return null;
+    }
+
+    const result = {
+      nodeType: node.nodeType,
+      nodeName: node.nodeName,
+      nodeValue: node.nodeValue,
+      tagName: node.tagName,
+      children: [],
+    };
+
+    // Process only important children to keep diagram clean
+    if (node.children && node.children.length > 0) {
+      for (let i = 0; i < node.children.length; i++) {
+        const child = simplifyNodeForDiagram(
+          node.children[i],
+          currentDepth + 1,
+          maxDepth
+        );
+        if (child) {
+          result.children.push(child);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  function createDiagramNode(node, depth) {
+    if (!node) return "";
+
+    // Determine node type and label
+    let nodeLabel = "";
+    let nodeClass = "";
+
+    if (node.nodeType === 1) {
+      // Element node
+      nodeLabel = node.tagName.toLowerCase();
+      nodeClass = "element-node";
+    } else if (node.nodeType === 3) {
+      // Text node
+      const text = node.nodeValue.trim();
+      nodeLabel = text.length > 10 ? text.substring(0, 10) + "..." : text;
+      nodeClass = "text-node";
+    } else if (node.nodeType === 8) {
+      // Comment node
+      nodeLabel = "comment";
+      nodeClass = "comment-node";
+    } else {
+      nodeLabel = node.nodeName;
+    }
+
+    let html = `<div class="diagram-tree">
+                  <div class="diagram-node ${nodeClass}" title="${nodeLabel}">${nodeLabel}</div>`;
+
+    // Add children if any
+    if (node.children && node.children.length > 0) {
+      html += `<div class="diagram-children">
+                <div class="diagram-children-container">`;
+
+      node.children.forEach((childNode) => {
+        html += `<div class="diagram-branch">${createDiagramNode(
+          childNode,
+          depth + 1
+        )}</div>`;
+      });
+
+      html += `</div></div>`;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  function createDiagramHTML(node) {
+    // Filter to only show element nodes for diagram view
+    // and limit depth to keep the diagram manageable
+    const simplifiedNode = simplifyNodeForDiagram(node);
+    return createDiagramNode(simplifiedNode, 0);
+  }
+
+  function createTreeHTML(node) {
+    let html = '<div class="tree-item">';
+
+    // Different display for different node types
+    if (node.nodeType === 1) {
+      // Element node
+      html += `<span class="tree-toggle">− </span>`;
+      html += `<span class="tree-element">&lt;${node.tagName}`;
+
+      // Add attributes
+      if (node.attributes && node.attributes.length > 0) {
+        node.attributes.forEach((attr) => {
+          html += `<span class="tree-attribute">${attr.name}="${attr.value}"</span>`;
+        });
+      }
+
+      html += "&gt;</span>";
+    } else if (node.nodeType === 3) {
+      // Text node
+      const text = node.nodeValue.trim();
+      if (text) {
+        html += `<span class="tree-text">"${text}"</span>`;
+      } else {
+        return ""; // Skip empty text nodes
+      }
+    } else if (node.nodeType === 8) {
+      // Comment node
+      html += `<span class="tree-comment">&lt;!-- ${node.nodeValue} --&gt;</span>`;
+    } else {
+      html += `<span>${node.nodeName}</span>`;
+    }
+
+    // Add children if any
+    if (node.children && node.children.length > 0) {
+      html += '<div class="tree-children">';
+
+      node.children.forEach((childNode) => {
+        const childHTML = createTreeHTML(childNode);
+        if (childHTML) {
+          // Only add non-empty child HTML
+          html += childHTML;
+        }
+      });
+
+      html += "</div>";
+
+      // Add closing tag for element nodes
+      if (node.nodeType === 1) {
+        html += `<span class="tree-element">&lt;/${node.tagName}&gt;</span>`;
+      }
+    } else if (node.nodeType === 1) {
+      // Self-closing tag for elements without children
+      html = html.replace("&gt;</span>", " /&gt;</span>");
+    }
+
+    html += "</div>";
+    return html;
+  }
+
+  function displayDOMTree(rootNode) {
+    treeContainer.innerHTML = "";
+
+    if (currentViewMode === "diagram") {
+      // Create visual diagram tree
+      const diagramHTML = createDiagramHTML(rootNode);
+      treeContainer.innerHTML = diagramHTML;
+    } else {
+      // Create code-style tree
+      const treeHTML = createTreeHTML(rootNode);
+      treeContainer.innerHTML = treeHTML;
+
+      // Add event listeners for tree toggles in code view
+      const toggles = treeContainer.querySelectorAll(".tree-toggle");
+      toggles.forEach((toggle) => {
+        toggle.addEventListener("click", function () {
+          const children = this.parentElement.querySelector(".tree-children");
+          if (children) {
+            if (children.style.display === "none") {
+              children.style.display = "block";
+              this.textContent = "− "; // Minus sign
+            } else {
+              children.style.display = "none";
+              this.textContent = "+ "; // Plus sign
+            }
+          }
+        });
+      });
+    }
+
+    treeContainer.style.display = "block";
+  }
+
   // View toggle buttons
   diagramViewBtn.addEventListener("click", function () {
     if (currentViewMode !== "diagram") {
@@ -231,204 +430,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
     );
-  }
-
-  function displayDOMTree(rootNode) {
-    treeContainer.innerHTML = "";
-
-    if (currentViewMode === "diagram") {
-      // Create visual diagram tree
-      const diagramHTML = createDiagramHTML(rootNode);
-      treeContainer.innerHTML = diagramHTML;
-    } else {
-      // Create code-style tree
-      const treeHTML = createTreeHTML(rootNode);
-      treeContainer.innerHTML = treeHTML;
-
-      // Add event listeners for tree toggles in code view
-      const toggles = treeContainer.querySelectorAll(".tree-toggle");
-      toggles.forEach((toggle) => {
-        toggle.addEventListener("click", function () {
-          const children = this.parentElement.querySelector(".tree-children");
-          if (children) {
-            if (children.style.display === "none") {
-              children.style.display = "block";
-              this.textContent = "− "; // Minus sign
-            } else {
-              children.style.display = "none";
-              this.textContent = "+ "; // Plus sign
-            }
-          }
-        });
-      });
-    }
-
-    treeContainer.style.display = "block";
-  }
-
-  function createDiagramHTML(node) {
-    // Filter to only show element nodes for diagram view
-    // and limit depth to keep the diagram manageable
-    const simplifiedNode = simplifyNodeForDiagram(node);
-    return createDiagramNode(simplifiedNode, 0);
-  }
-
-  function simplifyNodeForDiagram(node, currentDepth = 0, maxDepth = 5) {
-    // Skip if we've reached max depth
-    if (currentDepth > maxDepth) {
-      return null;
-    }
-
-    // Skip non-element nodes except for significant text nodes
-    if (
-      node.nodeType !== 1 &&
-      !(
-        node.nodeType === 3 &&
-        node.nodeValue &&
-        node.nodeValue.trim().length > 5
-      )
-    ) {
-      return null;
-    }
-
-    // Skip script, style, meta tags in the diagram
-    if (
-      node.nodeType === 1 &&
-      (node.tagName === "SCRIPT" ||
-        node.tagName === "LINK" ||
-        node.tagName === "NOSCRIPT")
-    ) {
-      return null;
-    }
-
-    const result = {
-      nodeType: node.nodeType,
-      nodeName: node.nodeName,
-      nodeValue: node.nodeValue,
-      tagName: node.tagName,
-      children: [],
-    };
-
-    // Process only important children to keep diagram clean
-    if (node.children && node.children.length > 0) {
-      for (let i = 0; i < node.children.length; i++) {
-        const child = simplifyNodeForDiagram(
-          node.children[i],
-          currentDepth + 1,
-          maxDepth
-        );
-        if (child) {
-          result.children.push(child);
-        }
-      }
-    }
-
-    return result;
-  }
-
-  function createDiagramNode(node, depth) {
-    if (!node) return "";
-
-    // Determine node type and label
-    let nodeLabel = "";
-    let nodeClass = "";
-
-    if (node.nodeType === 1) {
-      // Element node
-      nodeLabel = node.tagName.toLowerCase();
-      nodeClass = "element-node";
-    } else if (node.nodeType === 3) {
-      // Text node
-      const text = node.nodeValue.trim();
-      nodeLabel = text.length > 10 ? text.substring(0, 10) + "..." : text;
-      nodeClass = "text-node";
-    } else if (node.nodeType === 8) {
-      // Comment node
-      nodeLabel = "comment";
-      nodeClass = "comment-node";
-    } else {
-      nodeLabel = node.nodeName;
-    }
-
-    let html = `<div class="diagram-tree">
-                  <div class="diagram-node ${nodeClass}" title="${nodeLabel}">${nodeLabel}</div>`;
-
-    // Add children if any
-    if (node.children && node.children.length > 0) {
-      html += `<div class="diagram-children">
-                <div class="diagram-children-container">`;
-
-      node.children.forEach((childNode) => {
-        html += `<div class="diagram-branch">${createDiagramNode(
-          childNode,
-          depth + 1
-        )}</div>`;
-      });
-
-      html += `</div></div>`;
-    }
-
-    html += `</div>`;
-    return html;
-  }
-
-  function createTreeHTML(node) {
-    let html = '<div class="tree-item">';
-
-    // Different display for different node types
-    if (node.nodeType === 1) {
-      // Element node
-      html += `<span class="tree-toggle">− </span>`;
-      html += `<span class="tree-element">&lt;${node.tagName}`;
-
-      // Add attributes
-      if (node.attributes && node.attributes.length > 0) {
-        node.attributes.forEach((attr) => {
-          html += `<span class="tree-attribute">${attr.name}="${attr.value}"</span>`;
-        });
-      }
-
-      html += "&gt;</span>";
-    } else if (node.nodeType === 3) {
-      // Text node
-      const text = node.nodeValue.trim();
-      if (text) {
-        html += `<span class="tree-text">"${text}"</span>`;
-      } else {
-        return ""; // Skip empty text nodes
-      }
-    } else if (node.nodeType === 8) {
-      // Comment node
-      html += `<span class="tree-comment">&lt;!-- ${node.nodeValue} --&gt;</span>`;
-    } else {
-      html += `<span>${node.nodeName}</span>`;
-    }
-
-    // Add children if any
-    if (node.children && node.children.length > 0) {
-      html += '<div class="tree-children">';
-
-      node.children.forEach((childNode) => {
-        const childHTML = createTreeHTML(childNode);
-        if (childHTML) {
-          // Only add non-empty child HTML
-          html += childHTML;
-        }
-      });
-
-      html += "</div>";
-
-      // Add closing tag for element nodes
-      if (node.nodeType === 1) {
-        html += `<span class="tree-element">&lt;/${node.tagName}&gt;</span>`;
-      }
-    } else if (node.nodeType === 1) {
-      // Self-closing tag for elements without children
-      html = html.replace("&gt;</span>", " /&gt;</span>");
-    }
-
-    html += "</div>";
-    return html;
   }
 
   // Add click event for performance button
