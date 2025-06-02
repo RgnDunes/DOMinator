@@ -9,9 +9,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     // Initialize storage with default settings
     chrome.storage.sync.set({
       settings: {
-        darkMode:
-          window.matchMedia &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches,
+        darkMode: false, // Default to light mode
         autoExpandDepth: 2,
         showAttributes: true,
         showNodeValues: true,
