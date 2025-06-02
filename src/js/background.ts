@@ -1,16 +1,18 @@
 import { MessageType } from "./types";
 
 // Handle extension installation or update
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === "install") {
-    // First time installation
-    console.log("DOMinator extension installed");
-    initializeStorage();
-  } else if (details.reason === "update") {
-    // Extension updated
-    console.log("DOMinator extension updated");
+chrome.runtime.onInstalled.addListener(
+  (details: chrome.runtime.InstalledDetails) => {
+    if (details.reason === "install") {
+      // First time installation
+      console.log("DOMinator extension installed");
+      initializeStorage();
+    } else if (details.reason === "update") {
+      // Extension updated
+      console.log("DOMinator extension updated");
+    }
   }
-});
+);
 
 // Initialize storage with default settings
 function initializeStorage() {
@@ -35,22 +37,25 @@ function initializeStorage() {
 }
 
 // Set up connection between devtools panel and content script
-chrome.runtime.onConnect.addListener((port) => {
+chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
   // Listen for messages from the devtools panel
-  port.onMessage.addListener((message) => {
+  port.onMessage.addListener((message: any) => {
     if (!message.type) return;
 
     // Forward message to content script in active tab
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
-          // Forward response back to devtools panel
-          if (response) {
-            port.postMessage(response);
-          }
-        });
+    chrome.tabs.query(
+      { active: true, currentWindow: true },
+      (tabs: chrome.tabs.Tab[]) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(tabs[0].id, message, (response: any) => {
+            // Forward response back to devtools panel
+            if (response) {
+              port.postMessage(response);
+            }
+          });
+        }
       }
-    });
+    );
   });
 
   // Clean up when devtools panel is closed
@@ -60,20 +65,26 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 // Handle messages from content script or popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // If message is from content script, forward it to devtools panel
-  if (sender.tab && message.type === MessageType.DOMTreeResponse) {
-    chrome.runtime.sendMessage(message);
-  }
+chrome.runtime.onMessage.addListener(
+  (
+    message: any,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: any) => void
+  ) => {
+    // If message is from content script, forward it to devtools panel
+    if (sender.tab && message.type === MessageType.DOMTreeResponse) {
+      chrome.runtime.sendMessage(message);
+    }
 
-  // Handle export request
-  if (message.type === MessageType.ExportDOM) {
-    handleExport(message.payload);
-    sendResponse({ type: MessageType.ExportComplete });
-  }
+    // Handle export request
+    if (message.type === MessageType.ExportDOM) {
+      handleExport(message.payload);
+      sendResponse({ type: MessageType.ExportComplete });
+    }
 
-  return true; // Keep channel open for async responses
-});
+    return true; // Keep channel open for async responses
+  }
+);
 
 // Export DOM tree
 function handleExport(payload: { format: string; data: any }) {

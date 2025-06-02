@@ -16,6 +16,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "[name].js",
+    clean: true,
   },
   module: {
     rules: [
@@ -52,6 +53,15 @@ module.exports = {
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js", ".jsx"],
+    fallback: {
+      path: require.resolve("path-browserify"),
+      fs: false,
+      crypto: require.resolve("crypto-browserify"),
+      stream: require.resolve("stream-browserify"),
+    },
+    alias: {
+      react: path.resolve("./node_modules/react"),
+    },
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -74,8 +84,14 @@ module.exports = {
     }),
     new CopyPlugin({
       patterns: [
-        { from: "public", to: "." },
-        { from: "manifest.json", to: "." },
+        {
+          from: "public/images",
+          to: "images",
+        },
+        {
+          from: "manifest.json",
+          to: ".",
+        },
       ],
     }),
   ],
