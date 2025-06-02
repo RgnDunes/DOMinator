@@ -435,12 +435,20 @@ document.addEventListener("DOMContentLoaded", function () {
   // Add click event for performance button
   performanceBtn.addEventListener("click", function () {
     hideStatus();
+    // Hide tree container when using performance analysis
+    treeContainer.style.display = "none";
+    statsContainer.style.display = "none";
+    viewToggle.style.display = "none";
     showStatus("Performance analysis is coming soon!");
   });
 
   // Add click event for accessibility button
   accessibilityBtn.addEventListener("click", function () {
     hideStatus();
+    // Hide tree container when using accessibility checking
+    treeContainer.style.display = "none";
+    statsContainer.style.display = "none";
+    viewToggle.style.display = "none";
     showStatus("Accessibility checking is coming soon!");
   });
 });
