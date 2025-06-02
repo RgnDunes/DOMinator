@@ -52,7 +52,7 @@
       #treeContainer {
         display: none;
         margin-top: 15px;
-        max-height: 300px;
+        max-height: 400px;
         overflow: auto;
         border: 1px solid #e0e0e0;
         border-radius: 4px;
@@ -60,6 +60,92 @@
         background-color: #f8f9fa;
       }
 
+      /* Diagram tree style */
+      .diagram-tree {
+        text-align: center;
+        position: relative;
+        padding-top: 20px;
+      }
+
+      .diagram-node {
+        display: inline-block;
+        background-color: #c8d8f1;
+        border: 1px solid #4285f4;
+        border-radius: 4px;
+        padding: 4px 10px;
+        margin: 5px;
+        font-size: 13px;
+        position: relative;
+        cursor: pointer;
+        min-width: 40px;
+        text-align: center;
+      }
+
+      .diagram-node.element-node {
+        background-color: #c8d8f1;
+      }
+
+      .diagram-node.text-node {
+        background-color: #e6f4ea;
+        border-color: #34a853;
+        border-radius: 20px;
+      }
+
+      .diagram-node.comment-node {
+        background-color: #feefc3;
+        border-color: #fbbc04;
+      }
+
+      .diagram-children {
+        position: relative;
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .diagram-branch {
+        display: inline-block;
+        position: relative;
+        padding-top: 20px;
+      }
+
+      .diagram-line {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 2px;
+        height: 20px;
+        background-color: #4285f4;
+      }
+
+      .diagram-children::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 2px;
+        height: 20px;
+        background-color: #4285f4;
+      }
+
+      .diagram-branch::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 2px;
+        height: 20px;
+        background-color: #4285f4;
+      }
+
+      .diagram-children-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      /* Code view styles */
       .tree-item {
         margin: 2px 0;
         padding: 2px 0;
@@ -106,6 +192,28 @@
         border-radius: 4px;
         font-size: 12px;
       }
+
+      /* Button for switching view modes */
+      .view-mode-toggle {
+        margin-top: 10px;
+        text-align: center;
+      }
+
+      .view-mode-btn {
+        background-color: #f1f3f4;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        margin: 0 2px;
+      }
+
+      .view-mode-btn.active {
+        background-color: #e8f0fe;
+        border-color: #4285f4;
+        color: #1a73e8;
+      }
     </style>
   </head>
   <body>
@@ -120,6 +228,13 @@
     </button>
 
     <div id="statsContainer"></div>
+
+    <div class="view-mode-toggle" style="display: none" id="viewToggle">
+      <button class="view-mode-btn active" id="diagramViewBtn">
+        Diagram View
+      </button>
+      <button class="view-mode-btn" id="codeViewBtn">Code View</button>
+    </div>
 
     <div id="treeContainer"></div>
 

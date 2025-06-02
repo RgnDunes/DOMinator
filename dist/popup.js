@@ -14,9 +14,16 @@ document.addEventListener("DOMContentLoaded", function () {
   statusDiv.style.display = "none";
   document.body.appendChild(statusDiv);
 
-  // Get tree container
+  // Get tree container and view toggle
   const treeContainer = document.getElementById("treeContainer");
   const statsContainer = document.getElementById("statsContainer");
+  const viewToggle = document.getElementById("viewToggle");
+  const diagramViewBtn = document.getElementById("diagramViewBtn");
+  const codeViewBtn = document.getElementById("codeViewBtn");
+
+  // Store the DOM tree data
+  let currentDomTree = null;
+  let currentViewMode = "diagram"; // Default to diagram view
 
   function showStatus(message, isError = false) {
     statusDiv.textContent = message;
@@ -48,6 +55,29 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
+  // View toggle buttons
+  diagramViewBtn.addEventListener("click", function () {
+    if (currentViewMode !== "diagram") {
+      currentViewMode = "diagram";
+      diagramViewBtn.classList.add("active");
+      codeViewBtn.classList.remove("active");
+      if (currentDomTree) {
+        displayDOMTree(currentDomTree);
+      }
+    }
+  });
+
+  codeViewBtn.addEventListener("click", function () {
+    if (currentViewMode !== "code") {
+      currentViewMode = "code";
+      codeViewBtn.classList.add("active");
+      diagramViewBtn.classList.remove("active");
+      if (currentDomTree) {
+        displayDOMTree(currentDomTree);
+      }
+    }
+  });
+
   // Add click event for inspect button
   inspectBtn.addEventListener("click", function () {
     console.log("DOMinator: Inspect button clicked");
@@ -57,6 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Hide tree container when starting new inspection
     treeContainer.style.display = "none";
     statsContainer.style.display = "none";
+    viewToggle.style.display = "none";
 
     // Send message to content script
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -178,8 +209,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const maxDepth = response.payload.stats.maxDepth;
             showStatus(`Success! DOM tree with ${nodeCount} nodes generated.`);
 
+            // Save the DOM tree
+            currentDomTree = response.payload.root;
+
             // Display the DOM tree
-            displayDOMTree(response.payload.root);
+            displayDOMTree(currentDomTree);
 
             // Display stats
             statsContainer.innerHTML = `
@@ -187,6 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
               <div><strong>Maximum depth:</strong> ${maxDepth}</div>
             `;
             statsContainer.style.display = "block";
+            viewToggle.style.display = "block";
           }
         } else {
           showStatus(
@@ -201,27 +236,140 @@ document.addEventListener("DOMContentLoaded", function () {
   function displayDOMTree(rootNode) {
     treeContainer.innerHTML = "";
 
-    // Create DOM tree from the response
-    const treeHTML = createTreeHTML(rootNode);
-    treeContainer.innerHTML = treeHTML;
-    treeContainer.style.display = "block";
+    if (currentViewMode === "diagram") {
+      // Create visual diagram tree
+      const diagramHTML = createDiagramHTML(rootNode);
+      treeContainer.innerHTML = diagramHTML;
+    } else {
+      // Create code-style tree
+      const treeHTML = createTreeHTML(rootNode);
+      treeContainer.innerHTML = treeHTML;
 
-    // Add event listeners for tree toggles
-    const toggles = treeContainer.querySelectorAll(".tree-toggle");
-    toggles.forEach((toggle) => {
-      toggle.addEventListener("click", function () {
-        const children = this.parentElement.querySelector(".tree-children");
-        if (children) {
-          if (children.style.display === "none") {
-            children.style.display = "block";
-            this.textContent = "− "; // Minus sign
-          } else {
-            children.style.display = "none";
-            this.textContent = "+ "; // Plus sign
+      // Add event listeners for tree toggles in code view
+      const toggles = treeContainer.querySelectorAll(".tree-toggle");
+      toggles.forEach((toggle) => {
+        toggle.addEventListener("click", function () {
+          const children = this.parentElement.querySelector(".tree-children");
+          if (children) {
+            if (children.style.display === "none") {
+              children.style.display = "block";
+              this.textContent = "− "; // Minus sign
+            } else {
+              children.style.display = "none";
+              this.textContent = "+ "; // Plus sign
+            }
           }
-        }
+        });
       });
-    });
+    }
+
+    treeContainer.style.display = "block";
+  }
+
+  function createDiagramHTML(node) {
+    // Filter to only show element nodes for diagram view
+    // and limit depth to keep the diagram manageable
+    const simplifiedNode = simplifyNodeForDiagram(node);
+    return createDiagramNode(simplifiedNode, 0);
+  }
+
+  function simplifyNodeForDiagram(node, currentDepth = 0, maxDepth = 5) {
+    // Skip if we've reached max depth
+    if (currentDepth > maxDepth) {
+      return null;
+    }
+
+    // Skip non-element nodes except for significant text nodes
+    if (
+      node.nodeType !== 1 &&
+      !(
+        node.nodeType === 3 &&
+        node.nodeValue &&
+        node.nodeValue.trim().length > 5
+      )
+    ) {
+      return null;
+    }
+
+    // Skip script, style, meta tags in the diagram
+    if (
+      node.nodeType === 1 &&
+      (node.tagName === "SCRIPT" ||
+        node.tagName === "LINK" ||
+        node.tagName === "NOSCRIPT")
+    ) {
+      return null;
+    }
+
+    const result = {
+      nodeType: node.nodeType,
+      nodeName: node.nodeName,
+      nodeValue: node.nodeValue,
+      tagName: node.tagName,
+      children: [],
+    };
+
+    // Process only important children to keep diagram clean
+    if (node.children && node.children.length > 0) {
+      for (let i = 0; i < node.children.length; i++) {
+        const child = simplifyNodeForDiagram(
+          node.children[i],
+          currentDepth + 1,
+          maxDepth
+        );
+        if (child) {
+          result.children.push(child);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  function createDiagramNode(node, depth) {
+    if (!node) return "";
+
+    // Determine node type and label
+    let nodeLabel = "";
+    let nodeClass = "";
+
+    if (node.nodeType === 1) {
+      // Element node
+      nodeLabel = node.tagName.toLowerCase();
+      nodeClass = "element-node";
+    } else if (node.nodeType === 3) {
+      // Text node
+      const text = node.nodeValue.trim();
+      nodeLabel = text.length > 10 ? text.substring(0, 10) + "..." : text;
+      nodeClass = "text-node";
+    } else if (node.nodeType === 8) {
+      // Comment node
+      nodeLabel = "comment";
+      nodeClass = "comment-node";
+    } else {
+      nodeLabel = node.nodeName;
+    }
+
+    let html = `<div class="diagram-tree">
+                  <div class="diagram-node ${nodeClass}" title="${nodeLabel}">${nodeLabel}</div>`;
+
+    // Add children if any
+    if (node.children && node.children.length > 0) {
+      html += `<div class="diagram-children">
+                <div class="diagram-children-container">`;
+
+      node.children.forEach((childNode) => {
+        html += `<div class="diagram-branch">${createDiagramNode(
+          childNode,
+          depth + 1
+        )}</div>`;
+      });
+
+      html += `</div></div>`;
+    }
+
+    html += `</div>`;
+    return html;
   }
 
   function createTreeHTML(node) {
