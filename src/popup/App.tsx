@@ -9,7 +9,6 @@ import {
   FiZap,
   FiRefreshCw,
 } from "react-icons/fi";
-import html2canvas from "html2canvas";
 import DOMTree from "./components/DOMTree";
 import NodeDetails from "./components/NodeDetails";
 import SearchBar from "./components/SearchBar";
@@ -126,50 +125,6 @@ const App: React.FC = () => {
       console.error("Error exporting as JSON:", error);
       alert("Failed to export as JSON. See console for details.");
     }
-  };
-
-  // Export as Image
-  const exportAsImage = () => {
-    console.log("Exporting as image");
-    if (!domTree) {
-      console.error("No DOM tree available to export");
-      return;
-    }
-
-    // Get the DOM tree container
-    const domTreeContainer = document.querySelector(
-      ".dom-tree-container"
-    ) as HTMLElement;
-    if (!domTreeContainer) {
-      console.error("Could not find DOM tree container element");
-      alert("Could not find DOM tree container element");
-      return;
-    }
-
-    console.log("Found DOM tree container, attempting to capture image");
-
-    // Use html2canvas to capture the DOM tree as an image
-    html2canvas(domTreeContainer)
-      .then((canvas) => {
-        try {
-          console.log("Canvas created successfully");
-          const imageUrl = canvas.toDataURL("image/png");
-          const link = document.createElement("a");
-          link.download = "dom-tree.png";
-          link.href = imageUrl;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          console.log("Image export successful");
-        } catch (error) {
-          console.error("Error generating image:", error);
-          alert("Failed to generate image. See console for details.");
-        }
-      })
-      .catch((error) => {
-        console.error("html2canvas error:", error);
-        alert("Failed to generate image. See console for details.");
-      });
   };
 
   // Helper function to download a file
@@ -299,12 +254,6 @@ const App: React.FC = () => {
                       >
                         Export as JSON
                       </button>
-                      <button
-                        onClick={exportAsImage}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-                      >
-                        Export as Image
-                      </button>
                     </div>
                   )}
                 </div>
@@ -322,12 +271,5 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-// Add html2canvas type for TypeScript
-declare global {
-  interface Window {
-    html2canvas?: (element: HTMLElement) => Promise<HTMLCanvasElement>;
-  }
-}
 
 export default App;
