@@ -18,6 +18,7 @@ interface DOMStore {
   selectedNode: DOMNode | null;
   searchResults: DOMNode[];
   isLoading: boolean;
+  loadError: string | null;
   loadDOMTree: (tabId: number) => void;
   selectNode: (nodeId: string) => void;
   toggleNodeCollapse: (nodeId: string) => void;
@@ -34,23 +35,86 @@ export const useStore = create<DOMStore>((set, get) => ({
   selectedNode: null,
   searchResults: [],
   isLoading: false,
+  loadError: null,
   enhancedDOMEnabled: false,
   bookmarkedNodes: [],
 
   loadDOMTree: (tabId: number) => {
-    set({ isLoading: true });
+    set({ isLoading: true, loadError: null });
 
-    // Send message to content script to get DOM tree
-    chrome.tabs.sendMessage(tabId, { action: "getDOMTree" }, (response) => {
+    console.log("DOMinator Store: Loading DOM tree for tab", tabId);
+
+    // First ping the content script to make sure it's responsive
+    chrome.tabs.sendMessage(tabId, { action: "ping" }, (pingResponse) => {
       if (chrome.runtime.lastError) {
-        console.error("Error:", chrome.runtime.lastError);
-        set({ isLoading: false });
+        console.error(
+          "Error pinging content script:",
+          chrome.runtime.lastError
+        );
+        set({
+          isLoading: false,
+          loadError: `Content script not accessible: ${
+            chrome.runtime.lastError.message || "Unknown error"
+          }. Try refreshing the page.`,
+        });
         return;
       }
 
-      set({
-        domTree: response.domTree,
-        isLoading: false,
+      console.log(
+        "DOMinator Store: Content script ping response",
+        pingResponse
+      );
+
+      // Now request the DOM tree
+      chrome.tabs.sendMessage(tabId, { action: "getDOMTree" }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Error getting DOM tree:", chrome.runtime.lastError);
+          set({
+            isLoading: false,
+            loadError: `Failed to get DOM tree: ${
+              chrome.runtime.lastError.message || "Unknown error"
+            }. Try refreshing the extension.`,
+          });
+          return;
+        }
+
+        if (!response) {
+          console.error("Empty response from content script");
+          set({
+            isLoading: false,
+            loadError:
+              "Received empty response from content script. The page might be protected or using a Content Security Policy that blocks our script.",
+          });
+          return;
+        }
+
+        if (response.error) {
+          console.error("Error in DOM tree response:", response.error);
+          set({
+            isLoading: false,
+            loadError: response.error,
+          });
+          return;
+        }
+
+        if (!response.domTree) {
+          console.error("Invalid DOM tree response:", response);
+          set({
+            isLoading: false,
+            loadError: `Received invalid DOM tree data: ${JSON.stringify(
+              response
+            )}`,
+          });
+          return;
+        }
+
+        console.log("DOMinator Store: Received DOM tree", response.domTree);
+
+        set({
+          domTree: response.domTree,
+          isLoading: false,
+          loadError: null,
+        });
       });
     });
   },

@@ -9,9 +9,14 @@ interface DOMTreeProps {
 interface TreeNodeProps {
   node: DOMNode;
   depth: number;
+  isLastChild?: boolean;
 }
 
-const TreeNode: React.FC<TreeNodeProps> = ({ node, depth }) => {
+const TreeNode: React.FC<TreeNodeProps> = ({
+  node,
+  depth,
+  isLastChild = false,
+}) => {
   const { selectedNode, selectNode, toggleNodeCollapse } = useStore();
   const isSelected = selectedNode?.id === node.id;
   const hasChildren = node.children.length > 0;
@@ -27,93 +32,102 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth }) => {
     toggleNodeCollapse(node.id);
   };
 
-  const getNodeClasses = () => {
-    return `flex items-start py-1 px-1 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 ${
-      isSelected ? "tree-node-selected" : ""
-    }`;
-  };
-
-  const getTagAttributes = () => {
-    if (!node.attributes || Object.keys(node.attributes).length === 0) {
-      return "";
+  // Get node label - simplified version of tag and key attributes
+  const getNodeLabel = () => {
+    let label = node.tagName.toLowerCase();
+    if (node.attributes.id) {
+      label += `#${node.attributes.id}`;
+    } else if (node.attributes.class) {
+      const mainClass = node.attributes.class.split(" ")[0];
+      if (mainClass) {
+        label += `.${mainClass}`;
+      }
     }
-
-    return Object.entries(node.attributes).map(([key, value]) => {
-      if (key === "id") {
-        return (
-          <span
-            key={key}
-            className="text-purple-600 dark:text-purple-400"
-          >{` id="${value}"`}</span>
-        );
-      }
-      if (key === "class") {
-        return (
-          <span
-            key={key}
-            className="text-green-600 dark:text-green-400"
-          >{` class="${value}"`}</span>
-        );
-      }
-      return (
-        <span
-          key={key}
-          className="text-blue-600 dark:text-blue-400"
-        >{` ${key}="${value}"`}</span>
-      );
-    });
+    return label;
   };
 
   return (
-    <div style={{ paddingLeft: `${depth * 12}px` }}>
-      <div className={getNodeClasses()} onClick={handleNodeClick}>
-        {hasChildren && (
-          <button
-            onClick={handleToggleCollapse}
-            className="mr-1 flex-shrink-0 mt-0.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            {isCollapsed ? (
-              <FiChevronRight className="w-3 h-3" />
-            ) : (
-              <FiChevronDown className="w-3 h-3" />
-            )}
-          </button>
-        )}
-        {!hasChildren && <div className="w-4 mr-1" />}
-        <div className="flex flex-col">
-          <div>
-            <span className="text-orange-600 dark:text-orange-400">
-              &lt;{node.tagName.toLowerCase()}
+    <div className="relative">
+      {/* Connection lines */}
+      {depth > 0 && (
+        <div
+          className="absolute border-l-2 border-gray-300 dark:border-gray-700"
+          style={{
+            left: `${depth * 20 - 10}px`,
+            top: "-10px",
+            height: isLastChild ? "20px" : "100%",
+            width: "2px",
+          }}
+        />
+      )}
+
+      {depth > 0 && (
+        <div
+          className="absolute border-t-2 border-gray-300 dark:border-gray-700"
+          style={{
+            left: `${depth * 20 - 10}px`,
+            top: "10px",
+            width: "10px",
+            height: "2px",
+          }}
+        />
+      )}
+
+      {/* Node box */}
+      <div
+        className={`
+          relative ml-${depth * 5} mb-1 pl-2 py-1 pr-2 rounded-md cursor-pointer
+          ${
+            isSelected
+              ? "bg-blue-100 border-blue-500 dark:bg-blue-900 dark:border-blue-500"
+              : "bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-700"
+          }
+          border hover:shadow-md transition-shadow duration-200
+        `}
+        style={{ marginLeft: `${depth * 20}px` }}
+        onClick={handleNodeClick}
+      >
+        <div className="flex items-center">
+          {hasChildren && (
+            <button
+              onClick={handleToggleCollapse}
+              className="mr-1 flex-shrink-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              {isCollapsed ? (
+                <FiChevronRight className="w-3 h-3" />
+              ) : (
+                <FiChevronDown className="w-3 h-3" />
+              )}
+            </button>
+          )}
+
+          <div className="flex items-center overflow-hidden">
+            <span className="font-mono text-sm text-orange-600 dark:text-orange-400 font-medium">
+              {getNodeLabel()}
             </span>
-            {getTagAttributes()}
-            <span className="text-orange-600 dark:text-orange-400">&gt;</span>
+
             {node.textContent && node.children.length === 0 && (
-              <span className="text-gray-700 dark:text-gray-300 truncate max-w-xs">
-                {node.textContent.length > 20
-                  ? `${node.textContent.substring(0, 20)}...`
+              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">
+                {node.textContent.length > 15
+                  ? `${node.textContent.substring(0, 15)}...`
                   : node.textContent}
-              </span>
-            )}
-            {node.children.length === 0 && (
-              <span className="text-orange-600 dark:text-orange-400">
-                &lt;/{node.tagName.toLowerCase()}&gt;
               </span>
             )}
           </div>
         </div>
       </div>
 
+      {/* Children */}
       {hasChildren && !isCollapsed && (
-        <div>
-          {node.children.map((child) => (
-            <TreeNode key={child.id} node={child} depth={depth + 1} />
+        <div className="ml-5">
+          {node.children.map((child, index) => (
+            <TreeNode
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              isLastChild={index === node.children.length - 1}
+            />
           ))}
-          <div
-            style={{ paddingLeft: `${depth * 12 + 16}px` }}
-            className="text-orange-600 dark:text-orange-400 py-1"
-          >
-            &lt;/{node.tagName.toLowerCase()}&gt;
-          </div>
         </div>
       )}
     </div>
@@ -130,7 +144,7 @@ const DOMTree: React.FC<DOMTreeProps> = ({ tree }) => {
   }
 
   return (
-    <div className="font-mono text-sm">
+    <div className="p-2">
       <TreeNode node={tree} depth={0} />
     </div>
   );
