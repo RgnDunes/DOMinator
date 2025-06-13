@@ -123,14 +123,12 @@ const createDOMNodeRepresentation = (element: Element, depth = 0): DOMNode => {
 
     return node;
   } catch (error: any) {
-    console.error("DOMinator: Error creating DOM node representation:", error);
     throw new Error(`Failed to process DOM element: ${error.message}`);
   }
 };
 
 // Get the DOM tree starting from document.body
 const getDOMTree = (): { domTree: DOMNode | null; error?: string } => {
-  console.log("DOMinator: Getting DOM tree");
   try {
     if (!document || !document.documentElement) {
       return { domTree: null, error: "Document not available" };
@@ -139,7 +137,6 @@ const getDOMTree = (): { domTree: DOMNode | null; error?: string } => {
     const domTree = createDOMNodeRepresentation(document.documentElement);
     return { domTree };
   } catch (error: any) {
-    console.error("DOMinator: Error getting DOM tree:", error);
     return {
       domTree: null,
       error: `Failed to get DOM tree: ${error.message || "Unknown error"}`,
@@ -292,20 +289,15 @@ const addHighlightStyles = () => {
 
 // Initialize
 const initialize = () => {
-  console.log("DOMinator: Content script initialized");
   addHighlightStyles();
 
   // Listen for messages from the popup
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("DOMinator: Received message", message);
-
     if (message.action === "getDOMTree") {
       try {
         const result = getDOMTree();
-        console.log("DOMinator: Sending DOM tree", result);
         sendResponse(result);
       } catch (error: any) {
-        console.error("DOMinator: Error handling getDOMTree message:", error);
         sendResponse({
           domTree: null,
           error: `Error processing DOM tree: ${
@@ -322,7 +314,6 @@ const initialize = () => {
       sendResponse({ success: true });
     } else if (message.action === "ping") {
       // Simple ping to check if content script is loaded
-      console.log("DOMinator: Received ping");
       sendResponse({ success: true, message: "Content script is active" });
     }
 
@@ -334,10 +325,9 @@ const initialize = () => {
   try {
     chrome.runtime.sendMessage({ action: "contentScriptReady" });
   } catch (e) {
-    console.error("DOMinator: Failed to send ready message", e);
+    // Ignore errors
   }
 };
 
 // Start the extension
-console.log("DOMinator: Content script loading");
 initialize();

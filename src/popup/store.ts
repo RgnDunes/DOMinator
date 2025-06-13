@@ -42,15 +42,9 @@ export const useStore = create<DOMStore>((set, get) => ({
   loadDOMTree: (tabId: number) => {
     set({ isLoading: true, loadError: null });
 
-    console.log("DOMinator Store: Loading DOM tree for tab", tabId);
-
     // First ping the content script to make sure it's responsive
     chrome.tabs.sendMessage(tabId, { action: "ping" }, (pingResponse) => {
       if (chrome.runtime.lastError) {
-        console.error(
-          "Error pinging content script:",
-          chrome.runtime.lastError
-        );
         set({
           isLoading: false,
           loadError: `Content script not accessible: ${
@@ -60,15 +54,9 @@ export const useStore = create<DOMStore>((set, get) => ({
         return;
       }
 
-      console.log(
-        "DOMinator Store: Content script ping response",
-        pingResponse
-      );
-
       // Now request the DOM tree
       chrome.tabs.sendMessage(tabId, { action: "getDOMTree" }, (response) => {
         if (chrome.runtime.lastError) {
-          console.error("Error getting DOM tree:", chrome.runtime.lastError);
           set({
             isLoading: false,
             loadError: `Failed to get DOM tree: ${
@@ -79,7 +67,6 @@ export const useStore = create<DOMStore>((set, get) => ({
         }
 
         if (!response) {
-          console.error("Empty response from content script");
           set({
             isLoading: false,
             loadError:
@@ -89,7 +76,6 @@ export const useStore = create<DOMStore>((set, get) => ({
         }
 
         if (response.error) {
-          console.error("Error in DOM tree response:", response.error);
           set({
             isLoading: false,
             loadError: response.error,
@@ -98,7 +84,6 @@ export const useStore = create<DOMStore>((set, get) => ({
         }
 
         if (!response.domTree) {
-          console.error("Invalid DOM tree response:", response);
           set({
             isLoading: false,
             loadError: `Received invalid DOM tree data: ${JSON.stringify(
@@ -107,8 +92,6 @@ export const useStore = create<DOMStore>((set, get) => ({
           });
           return;
         }
-
-        console.log("DOMinator Store: Received DOM tree", response.domTree);
 
         set({
           domTree: response.domTree,

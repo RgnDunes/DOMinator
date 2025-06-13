@@ -5,29 +5,36 @@ const contentScriptTabs = new Set<number>();
 
 // Listen for installation
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("DOMinator extension installed");
+  // Extension installed
 });
 
-// Listen for tab updates to track which tabs have our content script
+// Listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // If the tab is fully loaded and has a supported URL, inject the content script
   if (
     changeInfo.status === "complete" &&
     tab.url &&
-    !tab.url.startsWith("chrome://")
+    tab.url.startsWith("http")
   ) {
-    console.log(
-      `DOMinator: Tab ${tabId} updated, checking content script status`
-    );
+    // Try to inject the content script
+    chrome.scripting
+      .executeScript({
+        target: { tabId },
+        files: ["src/content.js"],
+      })
+      .then(() => {
+        contentScriptTabs.add(tabId);
+      })
+      .catch(() => {
+        // Ignore errors - some pages don't allow content scripts
+      });
   }
 });
 
 // Listen for messages from content script or popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("DOMinator: Background received message", message, sender);
-
   if (message.action === "contentScriptReady" && sender.tab?.id) {
     // Content script has loaded in a tab
-    console.log(`DOMinator: Content script ready in tab ${sender.tab.id}`);
     contentScriptTabs.add(sender.tab.id);
     sendResponse({ success: true });
     return true;
@@ -36,34 +43,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "checkContentScript" && message.tabId) {
     // Check if content script is loaded in the specified tab
     const isLoaded = contentScriptTabs.has(message.tabId);
-    console.log(
-      `DOMinator: Content script loaded in tab ${message.tabId}? ${isLoaded}`
-    );
 
     if (isLoaded) {
       sendResponse({ isLoaded });
     } else {
       // Try to inject the content script if not loaded
       try {
-        console.log("DOMinator: Attempting to inject content script");
         chrome.scripting
           .executeScript({
             target: { tabId: message.tabId },
             files: ["src/content.js"],
           })
           .then(() => {
-            console.log(
-              `DOMinator: Injected content script into tab ${message.tabId}`
-            );
             contentScriptTabs.add(message.tabId);
             sendResponse({ isLoaded: true, injected: true });
           })
           .catch((error) => {
-            console.error(`DOMinator: Failed to inject content script:`, error);
             sendResponse({ isLoaded: false, error: error.message });
           });
       } catch (error) {
-        console.error(`DOMinator: Error injecting content script:`, error);
         sendResponse({ isLoaded: false, error: String(error) });
       }
       return true;
@@ -96,19 +94,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Return true to indicate we'll respond asynchronously
     return true;
   }
+
+  return false;
 });
 
-// Keep service worker alive
-function keepAlive() {
-  setInterval(() => {
-    console.log("DOMinator: Keeping service worker alive");
-  }, 20000);
-}
-
-// When a tab is closed, remove it from our tracking
+// Clean up when tabs are closed
 chrome.tabs.onRemoved.addListener((tabId) => {
   contentScriptTabs.delete(tabId);
-  console.log(`DOMinator: Tab ${tabId} closed, removed from tracking`);
 });
-
-keepAlive();

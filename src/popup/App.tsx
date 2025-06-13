@@ -69,19 +69,14 @@ const App: React.FC = () => {
   };
 
   const checkContentScriptAndLoad = (tabId: number) => {
-    console.log("DOMinator: Checking content script status for tab", tabId);
-
     // Check with background script if content script is loaded
     chrome.runtime.sendMessage(
       { action: "checkContentScript", tabId },
       (response) => {
         if (chrome.runtime.lastError) {
-          console.error("Error:", chrome.runtime.lastError);
           setLoadingError("Could not communicate with background script");
           return;
         }
-
-        console.log("DOMinator: Content script check response", response);
 
         // Now try to load the DOM tree
         loadDOMTree(tabId);
@@ -104,15 +99,12 @@ const App: React.FC = () => {
 
   // Function to toggle export menu
   const handleExportClick = () => {
-    console.log("Export button clicked");
     setShowExportMenu(!showExportMenu);
   };
 
   // Export as JSON
   const exportAsJSON = () => {
-    console.log("Exporting as JSON");
     if (!domTree) {
-      console.error("No DOM tree available to export");
       return;
     }
 
@@ -120,17 +112,14 @@ const App: React.FC = () => {
       const jsonString = JSON.stringify(domTree, null, 2);
       const blob = new Blob([jsonString], { type: "application/json" });
       downloadFile(blob, "dom-tree.json");
-      console.log("JSON export successful");
     } catch (error) {
-      console.error("Error exporting as JSON:", error);
-      alert("Failed to export as JSON. See console for details.");
+      alert("Failed to export as JSON");
     }
   };
 
   // Helper function to download a file
   const downloadFile = (blob: Blob, filename: string) => {
     try {
-      console.log(`Downloading file: ${filename}`);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -139,9 +128,8 @@ const App: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      console.log("Download initiated");
     } catch (error) {
-      console.error("Error downloading file:", error);
+      alert("Failed to download file");
     }
   };
 
