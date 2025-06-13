@@ -3,7 +3,7 @@
 A Chrome extension that enhances the developer experience by providing advanced DOM visualization, analysis, and AI-powered suggestions for web development.
 
 <p align="center">
-  <img src="public/icons/icon128.png" alt="DOMinator Logo" width="128" height="128">
+  <img width="269" alt="Screenshot 2025-06-14 at 12 27 33 AM" src="https://github.com/user-attachments/assets/c78d85e5-d210-4cf8-ae90-075a6b772f2d" />
 </p>
 
 ## Overview
@@ -27,7 +27,7 @@ DOMinator is a powerful developer tool designed to transform how web developers 
 
 ### From Chrome Web Store
 
-1. Visit the [DOMinator page](#) on the Chrome Web Store
+1. Visit the [DOMinator page](/#) on the Chrome Web Store
 2. Click "Add to Chrome"
 3. Confirm the installation when prompted
 
@@ -68,12 +68,21 @@ DOMinator is a powerful developer tool designed to transform how web developers 
 ## Screenshots
 
 <p align="center">
-  <img src="public/screenshots/dominator-main.png" alt="DOMinator Main Interface" width="600">
+ <img width="444" alt="Screenshot 2025-06-13 at 9 07 20 PM" src="https://github.com/user-attachments/assets/c0f83ea7-8eee-47d2-9e23-e97f3036f0a3" />
 </p>
 
 <p align="center">
-  <img src="public/screenshots/dominator-analysis.png" alt="DOMinator Analysis View" width="600">
+<img width="427" alt="Screenshot 2025-06-14 at 12 08 20 AM" src="https://github.com/user-attachments/assets/55a850bb-6050-40c4-83ec-56924caac97a" />
 </p>
+
+<p align="center">
+  <img width="426" alt="Screenshot 2025-06-14 at 12 08 28 AM" src="https://github.com/user-attachments/assets/959d0ca6-6095-4825-b926-727ae5bb28a6" />
+</p>
+
+<p align="center">
+  <img width="418" alt="Screenshot 2025-06-14 at 12 08 08 AM" src="https://github.com/user-attachments/assets/d546fedc-0e63-4317-896a-65cef9ede37f" />
+</p>
+
 
 ## Technologies
 
