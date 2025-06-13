@@ -27,7 +27,7 @@ DOMinator is a powerful developer tool designed to transform how web developers 
 
 ### From Chrome Web Store
 
-1. Visit the [DOMinator page](https://chrome.google.com/webstore/detail/dominator/extension-id) on the Chrome Web Store
+1. Visit the [DOMinator page](#) on the Chrome Web Store
 2. Click "Add to Chrome"
 3. Confirm the installation when prompted
 
@@ -36,7 +36,7 @@ DOMinator is a powerful developer tool designed to transform how web developers 
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/yourusername/dominator.git
+   git clone https://github.com/RgnDunes/dominator.git
    cd dominator
    ```
 
