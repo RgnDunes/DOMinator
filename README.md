@@ -1,129 +1,78 @@
-# DOMinator - Chrome Extension for DOM Visualization & Analysis
+# DOMinator
 
-DOMinator is a powerful Chrome extension that helps developers visualize, analyze, and export DOM trees with detailed insights into structure, performance, and accessibility.
+A Chrome extension that enhances the developer experience by providing advanced DOM visualization, analysis, and AI-powered suggestions.
 
-## 🌟 Features
+## Features
 
-### Interactive DOM Tree Visualization
+- **Visualize the DOM Tree** - Collapsible, customizable tree view of the current page's DOM
+- **Search and Highlight Nodes** - Find elements using CSS selectors, XPath, or tag/ID/class keywords
+- **AI-Powered Explanations** - Get explanations about DOM elements and their purpose
+- **Semantic Suggestions** - Receive recommendations for improving HTML structure and accessibility
+- **Real-time Editing** - Modify HTML attributes and content with AI recommendations
+- **Export DOM Tree** - Save simplified DOM tree as JSON or image for documentation
+- **Toggle Enhanced DOM** - Switch between original and AI-enhanced semantic versions
+- **Anti-pattern Detection** - Identify common issues like deeply nested divs with refactoring suggestions
+- **Dark Mode** - Eye-friendly interface for night coding
+- **Bookmark DOM Paths** - Save important elements for debugging sessions
 
-- Generate the full DOM tree of the current webpage
-- Display in a collapsible, searchable, and color-coded format
-- Hover-to-highlight feature: When you hover over a node in the tree, the corresponding element on the webpage is highlighted.
+## Installation
 
-### Detailed Node Inspector
-
-- Show element details such as tag names, attributes, styles, computed values, and event listeners.
-- Include support for inline styles, classes, dataset attributes, and ARIA roles.
-
-### Filtering, Search, and Custom Views
-
-- Filter nodes by tag (e.g., div, span), classes, attributes, or text content
-- Search within the tree for specific elements or properties
-- Toggle visibility of certain node types (like script tags or comments) for a cleaner tree view
-
-### DOM Export and Snapshot
-
-- Export the DOM tree as a JSON file, text file, or a visual tree diagram image
-- Capture snapshots of the DOM tree at different times for debugging dynamic pages
-- Compare snapshots to detect DOM changes over time
-
-### Performance Insights
-
-- Display key metrics like total nodes, maximum depth, etc.
-- Identify nodes contributing to layout shifts or reflows
-- Find elements with heavy inline styles or large datasets
-
-### Accessibility Insights
-
-- Highlight potential accessibility issues like missing alt attributes, ARIA roles, or improper semantic tags
-- Provide an A11y summary report for the entire DOM
-
-### Live DOM Update Mode
-
-- Watch the DOM tree update in real-time as page content changes (ideal for SPAs and dynamic apps)
-
-### Bookmarking and Notes
-
-- Bookmark specific nodes for future reference
-- Add notes to nodes for collaboration or feature reviews
-
-## 🚀 Installation
-
-### From Chrome Web Store
-
-_(Coming soon)_
-
-### Manual Installation (Developer Mode)
+### Development Mode
 
 1. Clone this repository:
 
    ```
-   git clone https://github.com/RgnDunes/DOMinator
+   git clone https://github.com/yourusername/dominator.git
+   cd dominator
    ```
 
-2. Build the extension:
+2. Install dependencies:
 
    ```
-   cd DOMinator
    npm install
+   ```
+
+3. Convert SVG icons to PNG (required for Chrome extensions):
+
+   ```
+   # Using ImageMagick (install if needed)
+   convert -background none public/icons/icon16.svg public/icons/icon16.png
+   convert -background none public/icons/icon48.svg public/icons/icon48.png
+   convert -background none public/icons/icon128.svg public/icons/icon128.png
+   ```
+
+4. Build the extension:
+
+   ```
    npm run build
    ```
 
-3. Load the extension in Chrome:
+5. Load the extension in Chrome:
    - Open Chrome and navigate to `chrome://extensions/`
-   - Enable "Developer mode" in the top-right corner
-   - Click "Load unpacked" and select the `dist` folder from the project directory
+   - Enable "Developer mode"
+   - Click "Load unpacked" and select the `dist` folder from this project
 
-## 🔧 Development
+## Usage
 
-### Prerequisites
+1. Click the DOMinator icon in your Chrome toolbar to open the popup
+2. Use the tree view to navigate the DOM structure of the current page
+3. Search for specific elements using the search bar
+4. Select elements to view details, get AI explanations, or edit properties
+5. Export the DOM tree or specific sections as needed
 
-- Node.js (v14 or later)
-- npm (v6 or later)
+## Technologies
 
-### Setup Development Environment
+- **Chrome Extension API** (Manifest V3)
+- **React** for UI components
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Zustand** for state management
+- **OpenAI API** for AI-powered features
 
-```
-git clone https://github.com/RgnDunes/DOMinator
-cd dominator
-npm install
-```
+## Contributing
 
-### Development Commands
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- `npm run dev` - Start development mode with hot reloading
-- `npm run build` - Build the extension for production
-- `npm test` - Run tests
+## License
 
-## 🧩 Usage
-
-1. Click the DOMinator icon in your Chrome toolbar
-2. Click "Inspect DOM Tree" to open the visualization panel
-3. Navigate the tree, search for elements, or use filters to focus on specific parts
-4. Use the Node Inspector to view detailed information about selected elements
-5. Export the DOM tree or take snapshots as needed
-
-## 📖 Documentation
-
-### Main Views
-
-- **Tree View**: Navigate the DOM structure with expandable/collapsible nodes
-- **Performance View**: Analyze performance metrics and identify bottlenecks
-- **Accessibility View**: Check for accessibility issues and get remediation suggestions
-
-### Features Guide
-
-- **Filtering**: Use the sidebar to filter elements by tag name, visibility, etc.
-- **Search**: Enter text in the search box to find nodes by tag, attribute, or content
-- **Bookmarks**: Click the bookmark button in the inspector to save important nodes
-- **Export**: Use the export button to save the DOM tree as JSON or text
-- **Snapshots**: Capture the current DOM state to compare changes over time
-- **Live Mode**: Toggle live updates to watch the DOM change in real-time
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-Built with ❤️ for web developers who appreciate DOM visualization and analysis.
+MIT
