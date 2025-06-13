@@ -42,7 +42,6 @@ export const useStore = create<DOMStore>((set, get) => ({
   loadDOMTree: (tabId: number) => {
     set({ isLoading: true, loadError: null });
 
-    // First ping the content script to make sure it's responsive
     chrome.tabs.sendMessage(tabId, { action: "ping" }, (pingResponse) => {
       if (chrome.runtime.lastError) {
         set({
@@ -54,7 +53,6 @@ export const useStore = create<DOMStore>((set, get) => ({
         return;
       }
 
-      // Now request the DOM tree
       chrome.tabs.sendMessage(tabId, { action: "getDOMTree" }, (response) => {
         if (chrome.runtime.lastError) {
           set({
@@ -120,7 +118,6 @@ export const useStore = create<DOMStore>((set, get) => ({
     if (node) {
       set({ selectedNode: node });
 
-      // Highlight the node in the page
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.id) {
           chrome.tabs.sendMessage(tabs[0].id, {
@@ -158,7 +155,6 @@ export const useStore = create<DOMStore>((set, get) => ({
     const results: DOMNode[] = [];
 
     const searchInNode = (node: DOMNode) => {
-      // Check if node matches the query
       const matchesTag = node.tagName
         .toLowerCase()
         .includes(query.toLowerCase());
@@ -176,7 +172,6 @@ export const useStore = create<DOMStore>((set, get) => ({
         results.push(node);
       }
 
-      // Search in children
       node.children.forEach(searchInNode);
     };
 
@@ -192,7 +187,6 @@ export const useStore = create<DOMStore>((set, get) => ({
     const newValue = !get().enhancedDOMEnabled;
     set({ enhancedDOMEnabled: newValue });
 
-    // Send message to content script to toggle enhanced DOM
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
         chrome.tabs.sendMessage(tabs[0].id, {

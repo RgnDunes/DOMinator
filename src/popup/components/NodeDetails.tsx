@@ -25,9 +25,7 @@ const NodeDetails: React.FC<NodeDetailsProps> = ({ node }) => {
   const requestAIExplanation = () => {
     setIsLoadingAI(true);
 
-    // Simulate AI request with timeout
     setTimeout(() => {
-      // This is where you would make an actual API call to OpenAI or similar
       const mockExplanation = `This ${node.tagName.toLowerCase()} element appears to be a ${
         node.attributes.class?.includes("nav")
           ? "navigation component"

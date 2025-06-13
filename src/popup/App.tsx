@@ -24,7 +24,6 @@ const App: React.FC = () => {
   const exportMenuRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Apply dark mode class to document
     if (darkMode) {
       document.documentElement.classList.add("dark");
     } else {
@@ -33,11 +32,9 @@ const App: React.FC = () => {
   }, [darkMode]);
 
   useEffect(() => {
-    // Load DOM tree from the current tab
     loadDOMTreeFromCurrentTab();
   }, []);
 
-  // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -60,7 +57,6 @@ const App: React.FC = () => {
   const loadDOMTreeFromCurrentTab = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
-        // First check if the content script is loaded
         checkContentScriptAndLoad(tabs[0].id);
       } else {
         setLoadingError("Could not get current tab");
@@ -69,7 +65,6 @@ const App: React.FC = () => {
   };
 
   const checkContentScriptAndLoad = (tabId: number) => {
-    // Check with background script if content script is loaded
     chrome.runtime.sendMessage(
       { action: "checkContentScript", tabId },
       (response) => {
@@ -78,7 +73,6 @@ const App: React.FC = () => {
           return;
         }
 
-        // Now try to load the DOM tree
         loadDOMTree(tabId);
       }
     );
@@ -97,12 +91,10 @@ const App: React.FC = () => {
     setShowSettings(!showSettings);
   };
 
-  // Function to toggle export menu
   const handleExportClick = () => {
     setShowExportMenu(!showExportMenu);
   };
 
-  // Export as JSON
   const exportAsJSON = () => {
     if (!domTree) {
       return;
@@ -117,7 +109,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Helper function to download a file
   const downloadFile = (blob: Blob, filename: string) => {
     try {
       const url = URL.createObjectURL(blob);
@@ -135,7 +126,6 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      {/* Header */}
       <header className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center">
           <h1 className="text-lg font-bold text-primary-600 dark:text-primary-400">
@@ -164,13 +154,10 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Settings Panel (conditionally rendered) */}
       {showSettings && <SettingsPanel onClose={toggleSettings} />}
 
-      {/* Search Bar (only shown when not in settings) */}
       {!showSettings && <SearchBar />}
 
-      {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center flex-1">
@@ -189,7 +176,6 @@ const App: React.FC = () => {
         ) : (
           !showSettings && (
             <div className="flex flex-col flex-1 overflow-hidden">
-              {/* DOM Tree */}
               <div className="flex-1 overflow-auto p-2 dom-tree-container">
                 <div className="flex justify-between items-center mb-2">
                   <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -206,14 +192,12 @@ const App: React.FC = () => {
                 <DOMTree tree={domTree} />
               </div>
 
-              {/* Selected Node Details */}
               {selectedNode && (
                 <div className="border-t border-gray-200 dark:border-gray-700">
                   <NodeDetails node={selectedNode} />
                 </div>
               )}
 
-              {/* Action Buttons */}
               <div className="flex justify-between p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                 <button
                   disabled={!selectedNode}
@@ -230,7 +214,6 @@ const App: React.FC = () => {
                     <FiDownload className="mr-1.5" /> Export
                   </button>
 
-                  {/* Export Menu */}
                   {showExportMenu && domTree && (
                     <div
                       ref={exportMenuRef}

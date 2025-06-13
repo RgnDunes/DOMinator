@@ -32,7 +32,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     toggleNodeCollapse(node.id);
   };
 
-  // Get node label - simplified version of tag and key attributes
   const getNodeLabel = () => {
     let label = node.tagName.toLowerCase();
     if (node.attributes.id) {
@@ -48,7 +47,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
   return (
     <div className="relative">
-      {/* Connection lines */}
       {depth > 0 && (
         <div
           className="absolute border-l-2 border-gray-300 dark:border-gray-700"
@@ -73,7 +71,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         />
       )}
 
-      {/* Node box */}
       <div
         className={`
           relative ml-${depth * 5} mb-1 pl-2 py-1 pr-2 rounded-md cursor-pointer
@@ -117,7 +114,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         </div>
       </div>
 
-      {/* Children */}
       {hasChildren && !isCollapsed && (
         <div className="ml-5">
           {node.children.map((child, index) => (

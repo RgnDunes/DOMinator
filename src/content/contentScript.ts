@@ -1,13 +1,9 @@
-// Content script for DOMinator extension
-
-// Store references to highlighted elements and overlay
 let highlightedElement: Element | null = null;
 let overlay: HTMLElement | null = null;
 let originalDOM: string | null = null;
 let enhancedDOM: string | null = null;
 let enhancedModeEnabled = false;
 
-// Define the DOMNode interface for type safety
 interface DOMNode {
   id: string;
   tagName: string;
@@ -21,12 +17,10 @@ interface DOMNode {
   collapsed?: boolean;
 }
 
-// Generate a unique ID for DOM nodes
 const generateUniqueId = (): string => {
   return "dominator-" + Math.random().toString(36).substr(2, 9);
 };
 
-// Get XPath for an element
 const getXPath = (element: Element): string => {
   if (!element) return "";
   if (element === document.body) return "/html/body";
@@ -50,7 +44,6 @@ const getXPath = (element: Element): string => {
   return "";
 };
 
-// Get a CSS selector for an element
 const getCssSelector = (element: Element): string => {
   if (!element) return "";
   if (element === document.body) return "body";
@@ -62,18 +55,15 @@ const getCssSelector = (element: Element): string => {
     return selector;
   }
 
-  // Safely handle className which might be a SVGAnimatedString or other non-string type
   if (element.className && typeof element.className === "string") {
     const classes = element.className.split(" ").filter((c) => c);
     if (classes.length > 0) {
       selector += `.${classes.join(".")}`;
     }
   } else if (element.classList && element.classList.length > 0) {
-    // Use classList as a fallback
     selector += `.${Array.from(element.classList).join(".")}`;
   }
 
-  // Add parent context if needed
   if (element.parentElement && element.parentElement !== document.body) {
     const parentSelector = getCssSelector(element.parentElement);
     selector = `${parentSelector} > ${selector}`;
@@ -82,19 +72,16 @@ const getCssSelector = (element: Element): string => {
   return selector;
 };
 
-// Create a simplified representation of a DOM node
 const createDOMNodeRepresentation = (element: Element, depth = 0): DOMNode => {
   try {
     const nodeId = generateUniqueId();
 
-    // Get attributes
     const attributes: Record<string, string> = {};
     for (let i = 0; i < element.attributes.length; i++) {
       const attr = element.attributes[i];
       attributes[attr.name] = attr.value;
     }
 
-    // Create node representation
     const node: DOMNode = {
       id: nodeId,
       tagName: element.tagName,
@@ -106,10 +93,8 @@ const createDOMNodeRepresentation = (element: Element, depth = 0): DOMNode => {
       depth,
     };
 
-    // Add data attribute to the actual DOM element for later reference
     element.setAttribute("data-dominator-id", nodeId);
 
-    // Process children (limit depth to avoid excessive recursion)
     if (depth < 50) {
       for (let i = 0; i < element.children.length; i++) {
         const childNode = createDOMNodeRepresentation(
@@ -127,7 +112,6 @@ const createDOMNodeRepresentation = (element: Element, depth = 0): DOMNode => {
   }
 };
 
-// Get the DOM tree starting from document.body
 const getDOMTree = (): { domTree: DOMNode | null; error?: string } => {
   try {
     if (!document || !document.documentElement) {
@@ -144,9 +128,7 @@ const getDOMTree = (): { domTree: DOMNode | null; error?: string } => {
   }
 };
 
-// Highlight an element on the page
 const highlightElement = (element: Element | null) => {
-  // Remove previous highlight
   if (overlay) {
     document.body.removeChild(overlay);
     overlay = null;
@@ -160,10 +142,8 @@ const highlightElement = (element: Element | null) => {
 
   if (!element) return;
 
-  // Add highlight class
   element.classList.add("dominator-highlighted");
 
-  // Create overlay
   const rect = element.getBoundingClientRect();
   overlay = document.createElement("div");
   overlay.style.position = "fixed";
@@ -179,19 +159,16 @@ const highlightElement = (element: Element | null) => {
 
   document.body.appendChild(overlay);
 
-  // Scroll into view if needed
   element.scrollIntoView({
     behavior: "smooth",
     block: "center",
   });
 };
 
-// Find element by dominator ID
 const findElementById = (id: string): Element | null => {
   return document.querySelector(`[data-dominator-id="${id}"]`);
 };
 
-// Toggle enhanced DOM mode
 const toggleEnhancedDOM = (enabled: boolean) => {
   enhancedModeEnabled = enabled;
 
@@ -201,31 +178,21 @@ const toggleEnhancedDOM = (enabled: boolean) => {
     }
 
     if (!enhancedDOM) {
-      // Generate enhanced DOM (this would ideally use AI suggestions)
-      // For now, we'll just make some simple semantic improvements
       enhanceDOMSemantics();
     } else {
-      // Restore previously generated enhanced DOM
       document.open();
       document.write(enhancedDOM);
       document.close();
     }
   } else if (originalDOM) {
-    // Restore original DOM
     document.open();
     document.write(originalDOM);
     document.close();
   }
 };
 
-// Enhance DOM semantics (simplified version)
 const enhanceDOMSemantics = () => {
-  // Store current DOM before making changes
   if (!enhancedDOM) {
-    // Simple semantic improvements
-    // Replace divs with semantic elements where appropriate
-
-    // Find navigation divs
     const potentialNavs = document.querySelectorAll(
       'div[class*="nav"], div[class*="menu"], div[id*="nav"], div[id*="menu"]'
     );
@@ -235,7 +202,6 @@ const enhanceDOMSemantics = () => {
       }
     });
 
-    // Find header divs
     const potentialHeaders = document.querySelectorAll(
       'div[class*="header"], div[id*="header"]'
     );
@@ -245,7 +211,6 @@ const enhanceDOMSemantics = () => {
       }
     });
 
-    // Find footer divs
     const potentialFooters = document.querySelectorAll(
       'div[class*="footer"], div[id*="footer"]'
     );
@@ -255,13 +220,11 @@ const enhanceDOMSemantics = () => {
       }
     });
 
-    // Add missing alt attributes to images
     const images = document.querySelectorAll("img:not([alt])");
     images.forEach((img) => {
       (img as HTMLImageElement).alt = "Image";
     });
 
-    // Add missing labels to form controls
     const formControls = document.querySelectorAll(
       "input:not([aria-label]):not([aria-labelledby]):not([title])"
     );
@@ -270,12 +233,10 @@ const enhanceDOMSemantics = () => {
       (input as HTMLInputElement).setAttribute("aria-label", `${type} field`);
     });
 
-    // Store the enhanced DOM
     enhancedDOM = document.documentElement.outerHTML;
   }
 };
 
-// Add CSS for highlighted elements
 const addHighlightStyles = () => {
   const style = document.createElement("style");
   style.textContent = `
@@ -287,11 +248,9 @@ const addHighlightStyles = () => {
   document.head.appendChild(style);
 };
 
-// Initialize
 const initialize = () => {
   addHighlightStyles();
 
-  // Listen for messages from the popup
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "getDOMTree") {
       try {
@@ -313,21 +272,15 @@ const initialize = () => {
       toggleEnhancedDOM(message.enabled);
       sendResponse({ success: true });
     } else if (message.action === "ping") {
-      // Simple ping to check if content script is loaded
       sendResponse({ success: true, message: "Content script is active" });
     }
 
-    // Return true to indicate we'll respond asynchronously
     return true;
   });
 
-  // Let the extension know the content script is ready
   try {
     chrome.runtime.sendMessage({ action: "contentScriptReady" });
-  } catch (e) {
-    // Ignore errors
-  }
+  } catch (e) {}
 };
 
-// Start the extension
 initialize();

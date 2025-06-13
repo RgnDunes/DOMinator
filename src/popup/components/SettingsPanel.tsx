@@ -9,7 +9,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   const [apiKey, setApiKey] = useState("");
   const [saved, setSaved] = useState(false);
 
-  // Load saved API key when component mounts
   React.useEffect(() => {
     chrome.storage.sync.get(["openaiApiKey"], (result) => {
       if (result.openaiApiKey) {
@@ -19,7 +18,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   }, []);
 
   const handleSave = () => {
-    // Save API key to Chrome storage
     chrome.storage.sync.set({ openaiApiKey: apiKey }, () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);

@@ -1,8 +1,5 @@
-// AI Service for DOMinator extension
-
 import { DOMNode } from "../popup/store";
 
-// Interface for AI explanation request
 interface AIExplanationRequest {
   nodeId: string;
   tagName: string;
@@ -12,18 +9,15 @@ interface AIExplanationRequest {
   xpath?: string;
 }
 
-// Interface for AI explanation response
 interface AIExplanationResponse {
   explanation: string;
   suggestions?: string[];
 }
 
-// Interface for AI DOM enhancement request
 interface AIDOMEnhancementRequest {
   domTree: DOMNode;
 }
 
-// Interface for AI DOM enhancement response
 interface AIDOMEnhancementResponse {
   enhancedDOM: string;
   changes: {
@@ -33,25 +27,14 @@ interface AIDOMEnhancementResponse {
   }[];
 }
 
-/**
- * Get an AI explanation for a DOM node
- * @param node The DOM node to explain
- * @returns Promise with the explanation
- */
 export const getAIExplanation = async (
   node: DOMNode
 ): Promise<AIExplanationResponse> => {
   try {
-    // For a real implementation, you would call an AI API like OpenAI here
-    // This is a mock implementation
-
-    // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Generate mock explanation based on node properties
     const explanation = generateMockExplanation(node);
 
-    // Generate mock suggestions
     const suggestions = generateMockSuggestions(node);
 
     return {
@@ -66,23 +49,15 @@ export const getAIExplanation = async (
   }
 };
 
-/**
- * Generate a mock explanation for a DOM node
- * @param node The DOM node to explain
- * @returns A mock explanation
- */
 const generateMockExplanation = (node: DOMNode): string => {
   const tagName = node.tagName.toLowerCase();
 
-  // Basic explanation based on tag name
   let explanation = `This is a <${tagName}> element`;
 
-  // Add information about ID if present
   if (node.attributes.id) {
     explanation += ` with ID "${node.attributes.id}"`;
   }
 
-  // Add information about classes if present
   if (node.attributes.class) {
     const classes = node.attributes.class.split(" ").filter(Boolean);
     if (classes.length === 1) {
@@ -92,7 +67,6 @@ const generateMockExplanation = (node: DOMNode): string => {
     }
   }
 
-  // Add information about children
   if (node.children.length > 0) {
     explanation += `. It contains ${node.children.length} child element${
       node.children.length !== 1 ? "s" : ""
@@ -101,7 +75,6 @@ const generateMockExplanation = (node: DOMNode): string => {
     explanation += ".";
   }
 
-  // Add purpose explanation based on tag and attributes
   explanation += "\n\n";
 
   if (tagName === "div") {
@@ -181,16 +154,10 @@ const generateMockExplanation = (node: DOMNode): string => {
   return explanation;
 };
 
-/**
- * Generate mock suggestions for improving a DOM node
- * @param node The DOM node to generate suggestions for
- * @returns An array of suggestions
- */
 const generateMockSuggestions = (node: DOMNode): string[] => {
   const suggestions: string[] = [];
   const tagName = node.tagName.toLowerCase();
 
-  // Suggest semantic elements instead of divs
   if (tagName === "div") {
     if (
       node.attributes.class?.includes("nav") ||
@@ -226,19 +193,16 @@ const generateMockSuggestions = (node: DOMNode): string[] => {
     }
   }
 
-  // Suggest adding alt text to images
   if (tagName === "img" && !node.attributes.alt) {
     suggestions.push("Add alt text to this image for better accessibility.");
   }
 
-  // Suggest adding type to buttons
   if (tagName === "button" && !node.attributes.type) {
     suggestions.push(
       'Add a type attribute to this button (e.g., type="button").'
     );
   }
 
-  // Suggest adding labels to form elements
   if (
     (tagName === "input" || tagName === "textarea" || tagName === "select") &&
     !node.attributes["aria-label"] &&
@@ -249,7 +213,6 @@ const generateMockSuggestions = (node: DOMNode): string[] => {
     );
   }
 
-  // Suggest adding rel to external links
   if (
     tagName === "a" &&
     node.attributes.href?.startsWith("http") &&
@@ -263,25 +226,14 @@ const generateMockSuggestions = (node: DOMNode): string[] => {
   return suggestions;
 };
 
-/**
- * Get AI suggestions for enhancing the entire DOM
- * @param domTree The DOM tree to enhance
- * @returns Promise with the enhanced DOM
- */
 export const getAIDOMEnhancement = async (
   domTree: DOMNode
 ): Promise<AIDOMEnhancementResponse> => {
   try {
-    // For a real implementation, you would call an AI API like OpenAI here
-    // This is a mock implementation
-
-    // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // In a real implementation, this would be the enhanced HTML from the AI
-    // For now, we'll just return a mock response
     return {
-      enhancedDOM: "<html><!-- Enhanced DOM would be here --></html>",
+      enhancedDOM: "<html>Enhanced DOM would be here</html>",
       changes: [
         {
           original: '<div class="navigation">',
@@ -304,10 +256,6 @@ export const getAIDOMEnhancement = async (
   }
 };
 
-/**
- * Check if an API key is configured
- * @returns Promise with boolean indicating if API key is configured
- */
 export const isAIConfigured = async (): Promise<boolean> => {
   return new Promise((resolve) => {
     chrome.storage.sync.get(["openaiApiKey"], (result) => {
@@ -316,11 +264,6 @@ export const isAIConfigured = async (): Promise<boolean> => {
   });
 };
 
-/**
- * Configure the AI service with an API key
- * @param apiKey The API key to use
- * @returns Promise indicating success
- */
 export const configureAI = async (apiKey: string): Promise<boolean> => {
   return new Promise((resolve) => {
     chrome.storage.sync.set({ openaiApiKey: apiKey }, () => {
